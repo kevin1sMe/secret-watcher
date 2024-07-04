@@ -1,0 +1,15 @@
+watch:
+  name: "my-secret"
+  namespace: "default"
+
+actions:
+  - name: "restart deploy"
+    strategy: "RestartDeploy"
+    selector:
+      namespace: "default"
+      labels: "app=nginx"
+
+  - name: "webhook for upload secret"
+    strategy: "Webhook"
+    url: "https://webhook"
+    header: "Authorization: Bearer your-key-here"

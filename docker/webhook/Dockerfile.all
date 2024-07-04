@@ -1,0 +1,4 @@
+FROM webhook:latest
+LABEL maintainer "kevinlin <linjiang1205@qq.com>"
+RUN apt-get update && apt-get install -y mysql-client
+RUN pip3 install tccli

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-watcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secret-watcher
+  template:
+    metadata:
+      labels:
+        app: secret-watcher
+    spec:
+      containers:
+      - name: secret-watcher
+        image: ccr.ccs.tencentyun.com/windsigh/secret_watcher:v0.1
+        command: ["/root/secret-watcher", "-config", "/config/config.yml" ]
+        volumeMounts:
+          - mountPath: "/config"
+            name: config
+      volumes:
+        - name: config
+          configMap:
+            name: config
+      serviceAccountName: secret-watcher-sa

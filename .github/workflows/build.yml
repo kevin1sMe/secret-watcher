@@ -1,0 +1,41 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ["*"]
+    tags: ["*"]
+    paths:
+      - "Dockerfile"
+      - ".github/workflows/build.yml"
+
+env:
+  IMAGE_NAME: kevinlin86/secret-watcher
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: DOCKER_HUB
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build the Docker image
+        run: docker build . --build-arg MIRROR_CN=false --build-arg DEVELOP_TOOLS=true --file Dockerfile --tag ${IMAGE_NAME}:${GITHUB_REF_NAME}
+      - name: Deploy to docker hub
+        run: |
+          # 获得当前日期
+          NOW=`TZ='Asia/Shanghai' date +%Y%m%d`
+          echo ${{ secrets.DOCKER_HUB_PWD }} | docker login -u ${{ secrets.DOCKER_HUB_USER }} --password-stdin 
+
+          # 处理master版本的一些特别逻辑
+          if [ $GITHUB_REF_NAME == "master" ]; then 
+            # master 版本会打一个日期的tag, 如dev-container:20231018
+            docker tag ${IMAGE_NAME}:${GITHUB_REF_NAME} ${IMAGE_NAME}:${NOW}
+            docker push ${IMAGE_NAME}:${NOW}
+
+            # master 版本会同步到latest
+            docker tag ${IMAGE_NAME}:${GITHUB_REF_NAME} ${IMAGE_NAME}:latest
+            docker push ${IMAGE_NAME}:latest
+          fi
+
+          # 推送分支镜像
+          docker push ${IMAGE_NAME}:${GITHUB_REF_NAME}

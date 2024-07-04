@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+type: Opaque
+data:
+  username: dXNlcm5hbWU=  # base64 编码后的 "username"
+  password: cGFzc3dvcmQ=  # base64 编码后的 "password"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf: |
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+        }
+
+        location /secret {
+            default_type text/plain;
+            alias /etc/secret/;
+            autoindex on;
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  labels: 
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+      test: kevin
+  template:
+    metadata:
+      labels:
+        app: myapp
+        test: kevin
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/secret
+          readOnly: true
+        - name: config-volume
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: my-secret
+      - name: config-volume
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+spec:
+  selector:
+    app: myapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
