@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: secret-watcher
-        image: ccr.ccs.tencentyun.com/windsigh/secret_watcher:v0.1
+        image: kevinlin86/secret-watcher:latest
         command: ["/root/secret-watcher", "-config", "/config/config.yml" ]
         volumeMounts:
           - mountPath: "/config"
