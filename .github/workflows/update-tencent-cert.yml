@@ -34,9 +34,11 @@ jobs:
           tccli configure set output json
       - name: update cert to tencentcloud
         run: |
+          decodePem=`cat $Pem | base64 -d`
+          decodeKey=`cat $Key | base64 -d`
           resp=$(tccli ssl UploadCertificate --cli-unfold-argument \
-            --CertificatePublicKey "$Pem" \
-            --CertificatePrivateKey "$Key" \
+            --CertificatePublicKey "$decodePem" \
+            --CertificatePrivateKey "$decodeKey" \
             --Repeatable False)
           echo "resp: $resp"
           # 获取证书ID
