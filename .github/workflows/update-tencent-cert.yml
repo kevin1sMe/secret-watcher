@@ -1,0 +1,50 @@
+name: Update SSL cert to TencentCloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      CertPem:
+        description: "pem证书"
+        required: true
+        default: ""
+      CertKey:
+        description: "key证书"
+        required: true
+        default: ""
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    container:
+      image: tencentcom/tencentcloud-cli
+    steps:
+      - name: Set environment variable from input
+        run: |
+          echo "Pem=${{ github.event.inputs.CertPem }}" >> $GITHUB_ENV
+          echo "Key=${{ github.event.inputs.CertKey }}" >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+        with:
+          submodules: false
+          fetch-depth: 1
+      - name: Setup tccli
+        run: |
+          tccli configure set secretId ${{ secrets.TENCENT_CLOUD_SECRET_ID }}
+          tccli configure set secretKey ${{ secrets.TENCENT_CLOUD_SECRET_KEY }}
+          tccli configure set output json
+      - name: Setup jq
+        uses: vegardit/gha-setup-jq@v1
+      - name: update sg
+        run: |
+          cd tools
+          resp=$(tccli ssl UploadCertificate --cli-unfold-argument \
+            --CertificatePublicKey "$Pem" \
+            --CertificatePrivateKey "$Key" \
+            --Repeatable False)
+          echo "resp: $resp"
+          # 获取证书ID
+          cert_id=$(echo $resp | egrep -o '"CertificateId": "[^"]+"' | cut -d'"' -f4)
+          echo "cert_id: $cert_id"
+          # 修改CDN加速域名配置
+          tccli cdn ModifyDomainConfig --cli-unfold-argument --Domain img.gameapp.club --Route  'Https.CertInfo.CertId' --Value "{\"update\":\"$cert_id\"}"
+          echo "update cdn domain img.gameapp.club cert_id to $cert_id"
