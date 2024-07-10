@@ -49,3 +49,19 @@ jobs:
           # 修改CDN加速域名配置
           tccli cdn ModifyDomainConfig --cli-unfold-argument --Domain img.gameapp.club --Route  'Https.CertInfo.CertId' --Value "{\"update\":\"$cert_id\"}"
           echo "update cdn domain img.gameapp.club cert_id to $cert_id"
+
+          # 获取一些证书信息
+          subject=$(echo $Pem | openssl  x509 -subject -noout)
+          date=$(echo $Pem | openssl  x509 -dates -noout)
+          echo "subject=$subject, date=$date"
+          echo "Subject=$subject" >> $GITHUB_ENV
+          echo "Date=$date" >> $GITHUB_ENV
+      - name: pushover-actions
+        uses: umahmood/pushover-actions@main
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+        with:
+          title: "上传证书到腾讯云成功"
+          status: ${{ job.status }}
+          message: "$Subject\n\n$Date"
