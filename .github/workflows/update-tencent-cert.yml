@@ -65,4 +65,4 @@ jobs:
         with:
           title: "上传证书到腾讯云成功"
           status: ${{ job.status }}
-          message: "$Subject\n\n$Date"
+          message: "${{e env.Subject }} \n\n${{ env.Date }}"
