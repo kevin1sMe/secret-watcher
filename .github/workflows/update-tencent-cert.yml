@@ -51,6 +51,9 @@ jobs:
           echo "update cdn domain img.gameapp.club cert_id to $cert_id"
 
           # 获取一些证书信息
+          echo "decodePem=$decodePem"
+          echo "decodeKey=$decodeKey"
+          echo "parse subject & expire"
           subject=$(echo $decodePem | openssl  x509 -subject -noout)
           date=$(echo $decodePem | openssl  x509 -dates -noout)
           echo "subject=$subject, date=$date"
