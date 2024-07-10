@@ -54,9 +54,8 @@ jobs:
           echo "parse subject & expire"
           subject=$(echo $Pem | base64 -d  | openssl  x509 -subject -noout)
           date=$(echo $Pem | base64 -d | openssl  x509 -dates -noout)
-          echo "subject=$subject, date=$date"
           echo "Subject=$subject" >> $GITHUB_ENV
-          echo "Date=$date" >> $GITHUB_ENV
+          echo "Date=$(echo $date | tr '\n' '<br>')" >> $GITHUB_ENV
       - name: pushover-actions
         uses: umahmood/pushover-actions@main
         env:
