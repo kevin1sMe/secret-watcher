@@ -1,0 +1,24 @@
+name: Test inputs
+
+on:
+  workflow_dispatch:
+    inputs:
+      CertPem:
+        description: "pem证书"
+        required: true
+        default: ""
+      CertKey:
+        description: "key证书"
+        required: true
+        default: ""
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set environment variable from input
+        run: |
+          echo "Pem=${{ github.event.inputs.CertPem }}" >> $GITHUB_ENV
+          echo "Key=${{ github.event.inputs.CertKey }}" >> $GITHUB_ENV
+          echo ""
+          echo "Pem length:${#Pem}"
+          echo "Key length:${#Key}"
