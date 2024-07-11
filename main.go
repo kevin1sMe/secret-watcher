@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -80,8 +81,16 @@ func main() {
 				Handle(clientset, yconfig.Actions, obj.(*corev1.Secret))
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				log.Info().Msgf("Secret [%s] update", secretName)
-				Handle(clientset, yconfig.Actions, newObj.(*corev1.Secret))
+				oldSecret := oldObj.(*corev1.Secret)
+				newSecret := newObj.(*corev1.Secret)
+
+				// 比较 Secret 的数据
+				if !reflect.DeepEqual(oldSecret.Data, newSecret.Data) {
+					log.Info().Msgf("Secret [%s] content updated", secretName)
+					Handle(clientset, yconfig.Actions, newSecret)
+				} else {
+					log.Debug().Msgf("Secret [%s] metadata updated, but content unchanged", secretName)
+				}
 			},
 			DeleteFunc: func(obj interface{}) {
 				log.Warn().Msgf("Secret [%s] deleted", secretName)
