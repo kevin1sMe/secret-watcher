@@ -7,6 +7,10 @@ on:
     paths:
       - "Dockerfile"
       - ".github/workflows/build.yml"
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: kevinlin86/secret-watcher
@@ -39,3 +43,4 @@ jobs:
 
           # 推送分支镜像
           docker push ${IMAGE_NAME}:${GITHUB_REF_NAME}
+
