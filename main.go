@@ -123,13 +123,13 @@ func Handle(clientset *kubernetes.Clientset, actions []*config.Action, secret *c
 				LabelSelector: action.Selector.Labels,
 			})
 			if err != nil {
-				log.Info().Msgf("List deployments error: %v", err)
-				return
+				log.Error().Msgf("Action [%s] failed: List deployments error: %v", action.Name, err)
+				continue
 			}
 
 			if len(deployments.Items) == 0 {
-				log.Info().Msgf("No deployments found for selector [%s]", action.Selector.Labels)
-				return
+				log.Info().Msgf("Action [%s]: No deployments found for selector [%s]", action.Name, action.Selector.Labels)
+				continue
 			}
 
 			for _, deployment := range deployments.Items {
@@ -140,10 +140,11 @@ func Handle(clientset *kubernetes.Clientset, actions []*config.Action, secret *c
 				// 应用patch
 				_, err = clientset.AppsV1().Deployments(action.Selector.Namespace).Patch(context.Background(), deployment.Name, types.StrategicMergePatchType, patchBytes, metav1.PatchOptions{})
 				if err != nil {
-					panic(err)
+					log.Error().Msgf("Action [%s] failed: Patch deployment [%s] error: %v", action.Name, deployment.Name, err)
+					continue
 				}
 
-				log.Info().Msgf("Deployment [%s] rollout restarted.", deployment.Name)
+				log.Info().Msgf("Action [%s]: Deployment [%s] rollout restarted.", action.Name, deployment.Name)
 			}
 		case "Webhook":
 			// URL      string   `yaml:"url"`
@@ -153,13 +154,13 @@ func Handle(clientset *kubernetes.Clientset, actions []*config.Action, secret *c
 			// 将secret的data转换为json格式并写入请求体
 			secretData, err := json.Marshal(secret.Data)
 			if err != nil {
-				log.Error().Msgf("Marshal secret data error: %v", err)
-				return
+				log.Error().Msgf("Action [%s] failed: Marshal secret data error: %v", action.Name, err)
+				continue
 			}
 			req, err := http.NewRequest("POST", action.URL, io.NopCloser(strings.NewReader(string(secretData))))
 			if err != nil {
-				log.Error().Msgf("Create request error: %v", err)
-				return
+				log.Error().Msgf("Action [%s] failed: Create request error: %v", action.Name, err)
+				continue
 			}
 
 			req.Header.Set("Authorization", action.Header)
@@ -175,10 +176,10 @@ func Handle(clientset *kubernetes.Clientset, actions []*config.Action, secret *c
 			}
 			_, err = httpClient.Do(req)
 			if err != nil {
-				log.Error().Msgf("Create request error: %v", err)
-				return
+				log.Error().Msgf("Action [%s] failed: Send webhook request error: %v", action.Name, err)
+				continue
 			}
-			log.Info().Msgf("Webhook request sent successfully")
+			log.Info().Msgf("Action [%s]: Webhook request sent successfully", action.Name)
 		}
 	}
 }
