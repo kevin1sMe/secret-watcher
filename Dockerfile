@@ -1,5 +1,5 @@
 # 使用官方的golang镜像作为构建环境
-FROM golang:1.20-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 RUN apk --update add ca-certificates upx
 
@@ -24,7 +24,7 @@ RUN upx -9 -o secret-watcher.minify secret-watcher && \
 
 # 使用轻量级的alpine镜像作为运行环境
 FROM alpine:latest
-LABEL maintainer "kevinlin <linjiang1205@qq.com>"
+LABEL maintainer="kevinlin <linjiang1205@qq.com>"
 
 # 设置工作目录
 WORKDIR /root/
