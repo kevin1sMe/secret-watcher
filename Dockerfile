@@ -1,5 +1,5 @@
 # 使用官方的golang镜像作为构建环境
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26.7-alpine AS builder
 
 RUN apk --update add ca-certificates upx
 
